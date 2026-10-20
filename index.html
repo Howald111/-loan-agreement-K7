@@ -144,7 +144,6 @@ const ADVANCE_DATE  = [2026, 10, 20];      // date the $5,000 is sent: [year, mo
 const FIRST_PAYMENT = [2026, 10, 30];      // first payday (a Friday)
 const PERIOD_DAYS   = 14;                  // every second Friday
 const AGREEMENT_DATE = "October 20, 2026";
-const EMAIL_COPY    = false;               // true = also send the signed PDF to LENDER_EMAIL via FormSubmit
 /* ============================================== */
 
 const DAY = 86400000;
@@ -321,25 +320,6 @@ function makePdf(borrower, email, sig, signedAt){
   return doc;
 }
 
-/* ---- email copy via FormSubmit (hidden form post) ---- */
-function emailCopy(blob, filename, borrower, email, signedAt){
-  try{
-    const ifr=document.createElement("iframe"); ifr.name="fs_sink"; ifr.style.display="none"; document.body.appendChild(ifr);
-    const f=document.createElement("form"); f.method="POST"; f.enctype="multipart/form-data"; f.target="fs_sink";
-    f.action="https://formsubmit.co/"+encodeURIComponent(LENDER_EMAIL);
-    const add=(k,v)=>{const i=document.createElement("input");i.type="hidden";i.name=k;i.value=v;f.appendChild(i);};
-    add("_subject","Signed loan agreement: "+borrower);
-    add("_captcha","false"); add("_template","table");
-    add("Borrower",borrower); add("Borrower email",email||"(not given)"); add("Signed",signedAt);
-    add("Loan",money(PRINCIPAL)+" at "+(ANNUAL_RATE*100).toFixed(2)+"%, total repaid "+money(TOT_PAID));
-    if(email) add("_cc",email);
-    const fi=document.createElement("input"); fi.type="file"; fi.name="attachment";
-    const dt=new DataTransfer(); dt.items.add(new File([blob],filename,{type:"application/pdf"})); fi.files=dt.files;
-    f.appendChild(fi); document.body.appendChild(f); f.submit();
-    return true;
-  }catch(e){ return false; }
-}
-
 btn.addEventListener("click",async()=>{
   errEl.textContent="";
   const borrower=nameEl.value.trim(), email=document.getElementById("bEmail").value.trim();
@@ -353,12 +333,8 @@ btn.addEventListener("click",async()=>{
     const safe=borrower.replace(/[^A-Za-z0-9]+/g,"_").replace(/^_|_$/g,"");
     lastName=`Loan_Agreement_${safe}_signed.pdf`; lastPdf=doc;
     doc.save(lastName);
-    let sent=false;
-    if(EMAIL_COPY) sent=emailCopy(doc.output("blob"),lastName,borrower,email,signedAt);
     document.getElementById("fname").textContent=lastName;
-    document.getElementById("sentNote").innerHTML = sent
-      ? `A copy is also being emailed to <b>${LENDER_EMAIL}</b>. To be safe, please email your PDF to that address as well.`
-      : `<b>Next step:</b> email this PDF to <b>${LENDER_EMAIL}</b>. Tap the button below to start the email, then attach <b>${lastName}</b> from your Downloads folder.`;
+    document.getElementById("sentNote").innerHTML = `<b>Next step:</b> email this PDF to <b>${LENDER_EMAIL}</b>. Tap the button below to start the email, then attach <b>${lastName}</b> from your Downloads folder.`;
     document.getElementById("mailBtn").href=`mailto:${LENDER_EMAIL}?subject=${encodeURIComponent("Signed loan agreement")}&body=${encodeURIComponent("Hi,\n\nMy signed loan agreement is attached ("+lastName+"). Please sign it and send me back a copy.\n\n"+borrower)}`;
     document.getElementById("signCard").style.display="none";
     document.getElementById("doneCard").classList.add("show");
