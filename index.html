@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Personal Loan Agreement</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+  :root{--ink:#1d2430;--muted:#5d6676;--line:#d9dde4;--bg:#f4f5f7;--card:#fff;--accent:#2f5d8a;--accent-ink:#fff;--ok:#2e7d4f;--warn:#a5462b}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Georgia,"Times New Roman",serif}
+  .wrap{max-width:820px;margin:0 auto;padding:24px 16px 64px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:28px 28px;margin-bottom:20px}
+  h1{font-size:1.7rem;margin:0 0 4px}
+  h2{font-size:1.1rem;margin:26px 0 8px;font-family:system-ui,-apple-system,Segoe UI,sans-serif;letter-spacing:.01em}
+  .sub{color:var(--muted);font-family:system-ui,-apple-system,Segoe UI,sans-serif;font-size:.92rem;margin:0}
+  p{margin:8px 0}
+  .parties{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px;font-family:system-ui,-apple-system,Segoe UI,sans-serif;font-size:.95rem}
+  .parties div{border:1px solid var(--line);border-radius:8px;padding:12px}
+  .parties b{display:block;color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
+  .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0 4px;font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+  .summary div{background:var(--bg);border-radius:8px;padding:10px 12px}
+  .summary span{display:block;font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .summary strong{font-size:1.1rem}
+  .tbl-wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-family:system-ui,-apple-system,Segoe UI,sans-serif;font-size:.9rem;margin-top:8px}
+  th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+  th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+  th{background:var(--bg);font-weight:600}
+  tfoot td{font-weight:700;border-top:2px solid var(--ink)}
+  ol.terms{padding-left:22px}
+  ol.terms li{margin:8px 0}
+  .form{font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+  label{display:block;font-weight:600;font-size:.92rem;margin:16px 0 6px}
+  input[type=text],input[type=email]{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:1rem}
+  .tabs{display:flex;gap:8px;margin-bottom:10px}
+  .tabs button{flex:0 0 auto;padding:8px 14px;border:1px solid var(--line);background:#fff;border-radius:999px;cursor:pointer;font-size:.9rem}
+  .tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .sigbox{border:1.5px dashed var(--line);border-radius:8px;min-height:150px;display:flex;align-items:center;justify-content:center;background:#fff;position:relative}
+  .sigbox img{max-width:100%;max-height:140px}
+  canvas#pad{width:100%;height:160px;touch-action:none;cursor:crosshair;display:block}
+  .hint{color:var(--muted);font-size:.85rem;margin-top:6px}
+  .row{display:flex;gap:10px;align-items:flex-start;margin-top:18px}
+  .row input{margin-top:5px;width:18px;height:18px;flex:0 0 auto}
+  .btn{display:inline-block;padding:13px 22px;background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;font-size:1rem;font-weight:600;cursor:pointer;margin-top:20px}
+  .btn[disabled]{opacity:.45;cursor:not-allowed}
+  .btn.ghost{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+  .linkbtn{background:none;border:0;color:var(--accent);text-decoration:underline;cursor:pointer;padding:0;font-size:.85rem}
+  .err{color:var(--warn);font-size:.9rem;margin-top:10px}
+  .done{display:none}
+  .done.show{display:block}
+  .done h2{color:var(--ok);margin-top:0}
+  @media (max-width:640px){
+    .card{padding:20px 16px}
+    .parties{grid-template-columns:1fr}
+    .summary{grid-template-columns:1fr 1fr}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" id="doc">
+    <h1>Personal Loan Agreement</h1>
+    <p class="sub" id="agreementDate"></p>
+
+    <div class="parties">
+      <div><b>Lender</b><span id="lenderName"></span></div>
+      <div><b>Borrower</b><span id="borrowerDisplay">(name entered below)</span></div>
+    </div>
+
+    <div class="summary" id="summary"></div>
+
+    <h2>Terms</h2>
+    <ol class="terms" id="terms"></ol>
+
+    <h2>Repayment schedule</h2>
+    <p class="sub">Each payment is $500.00 of principal plus the interest that built up on the remaining balance since the previous payment.</p>
+    <div class="tbl-wrap"><table id="sched"></table></div>
+    <button class="btn ghost form" id="calBtn" style="font-family:system-ui,-apple-system,Segoe UI,sans-serif">Add payment dates to my calendar</button>
+    <p class="hint form">Downloads a calendar file. Open it to add all ${n} payments to your iPhone, Google or Outlook calendar.</p>
+  </div>
+
+  <div class="card form" id="signCard">
+    <h2 style="margin-top:0">Sign the agreement</h2>
+
+    <label for="bName">Your full legal name</label>
+    <input type="text" id="bName" autocomplete="name">
+
+    <label for="bEmail">Your email (optional, for your records)</label>
+    <input type="email" id="bEmail" autocomplete="email">
+
+    <label>Your signature</label>
+    <div class="tabs">
+      <button type="button" id="tabUpload" class="on">Upload an image</button>
+      <button type="button" id="tabDraw">Draw it</button>
+    </div>
+
+    <div id="uploadPane">
+      <div class="sigbox" id="sigPreview"><span class="hint">No signature uploaded yet</span></div>
+      <input type="file" id="sigFile" accept="image/*" style="margin-top:10px">
+      <p class="hint">Sign on white paper, take a photo or scan, and upload it.</p>
+    </div>
+
+    <div id="drawPane" style="display:none">
+      <div class="sigbox"><canvas id="pad"></canvas></div>
+      <p class="hint">Sign with your finger or mouse. <button type="button" class="linkbtn" id="clearPad">Clear</button></p>
+    </div>
+
+    <div class="row">
+      <input type="checkbox" id="agree">
+      <label for="agree" style="margin:0;font-weight:400">I have read this agreement and the repayment schedule, I agree to its terms, and I intend my electronic signature to be as binding as a handwritten one.</label>
+    </div>
+
+    <button class="btn" id="signBtn" disabled>Sign and download PDF</button>
+    <div class="err" id="err"></div>
+  </div>
+
+  <div class="card form done" id="doneCard">
+    <h2>Signed. Thank you!</h2>
+    <p>Your signed copy has downloaded as <b id="fname"></b>. Keep it for your records.</p>
+    <p id="sentNote">A copy is also being emailed to <span class="lenderEmail"></span>. To be safe, please email your PDF to <span class="lenderEmail"></span> as well.</p>
+    <button class="btn ghost" id="againBtn">Download the PDF again</button>
+    <a class="btn ghost" id="mailBtn" style="text-decoration:none;margin-left:8px">Open an email to <span class="lenderShort"></span></a>
+    <div style="border-top:1px solid var(--line);margin-top:24px;padding-top:8px">
+      <h2 style="color:var(--ink)">Get payment reminders</h2>
+      <p>Add all the payment dates to your calendar. Each one shows that week's amount, with a reminder the day before at 9 a.m.</p>
+      <button class="btn" id="calBtn2">Add payment dates to my calendar</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ============ SETTINGS (edit these) ============ */
+const LENDER_NAME   = "Kristian Howald";
+const LENDER_EMAIL  = "kristian.howald@gmail.com";
+const PRINCIPAL     = 5000;
+const PRINCIPAL_PER_PAYMENT = 500;
+const ANNUAL_RATE   = 0.0645;              // 6.45% = prime 4.45% + 2%
+const RATE_NOTE     = "Canadian prime rate of 4.45% plus 2%, as of October 20, 2026";
+const ADVANCE_DATE  = [2026, 10, 20];      // date the $5,000 is sent: [year, month, day]
+const FIRST_PAYMENT = [2026, 10, 30];      // first payday (a Friday)
+const PERIOD_DAYS   = 14;                  // every second Friday
+const AGREEMENT_DATE = "October 20, 2026";
+const EMAIL_COPY    = true;                // send the signed PDF to LENDER_EMAIL via FormSubmit
+/* ============================================== */
+
+const DAY = 86400000;
+const d = a => Date.UTC(a[0], a[1]-1, a[2]);
+const fmtDate = t => new Date(t).toLocaleDateString("en-CA",{timeZone:"UTC",weekday:"short",year:"numeric",month:"short",day:"numeric"});
+const fmtLong = t => new Date(t).toLocaleDateString("en-CA",{timeZone:"UTC",year:"numeric",month:"long",day:"numeric"});
+const money = n => "$" + n.toLocaleString("en-CA",{minimumFractionDigits:2,maximumFractionDigits:2});
+const r2 = n => Math.round(n*100)/100;
+
+function buildSchedule(){
+  const rows=[]; let bal=PRINCIPAL; let prev=d(ADVANCE_DATE); let due=d(FIRST_PAYMENT); let n=1;
+  while(bal>0.004){
+    const days=Math.round((due-prev)/DAY);
+    const interest=r2(bal*ANNUAL_RATE*days/365);
+    const prin=Math.min(PRINCIPAL_PER_PAYMENT,bal);
+    const after=r2(bal-prin);
+    rows.push({n,due,days,start:bal,prin,interest,total:r2(prin+interest),after});
+    bal=after; prev=due; due+=PERIOD_DAYS*DAY; n++;
+  }
+  return rows;
+}
+const SCHED=buildSchedule();
+const TOT_INT=r2(SCHED.reduce((s,r)=>s+r.interest,0));
+const TOT_PAID=r2(PRINCIPAL+TOT_INT);
+const LAST=SCHED[SCHED.length-1];
+
+const TERMS=[
+  `Loan. The Lender agrees to lend the Borrower ${money(PRINCIPAL)} (Canadian dollars), sent by Interac e-Transfer on or about ${fmtLong(d(ADVANCE_DATE))}.`,
+  `Interest. The Lender is borrowing this money from a line of credit, so the loan carries simple interest at ${(ANNUAL_RATE*100).toFixed(2)}% per year (${RATE_NOTE}). The rate is fixed for the life of the loan. Interest is charged only on the unpaid balance, calculated daily from the date of the advance.`,
+  `Repayment. The Borrower will repay the loan on each payday, every second Friday, starting ${fmtLong(d(FIRST_PAYMENT))}. Each payment is ${money(PRINCIPAL_PER_PAYMENT)} of principal plus the interest owing for that period, as shown in the repayment schedule. The final payment is due ${fmtLong(LAST.due)}. Total repayment is ${money(TOT_PAID)}, of which ${money(TOT_INT)} is interest.`,
+  `Payment method. Payments will be made by Interac e-Transfer to ${LENDER_EMAIL}, or another method the Lender confirms in writing.`,
+  `Paying early. The Borrower may pay more than the scheduled amount, or pay off the full balance, at any time with no penalty. Extra principal reduces the interest on later payments.`,
+  `Late or missed payments. If the Borrower cannot make a payment on time, the Borrower will tell the Lender as soon as possible. A missed payment is added to the end of the schedule, and interest continues at the same rate on the unpaid balance until it is repaid. Any change to the schedule must be agreed in writing (email or text is enough).`,
+  `Whole agreement. This document and its repayment schedule are the whole agreement between the Lender and the Borrower about this loan. It is governed by the laws of the Province of Ontario.`,
+  `Electronic signature. The Borrower agrees that signing this agreement electronically has the same effect as signing a paper copy.`
+];
+
+/* ---- render document ---- */
+document.getElementById("agreementDate").textContent="Dated "+AGREEMENT_DATE;
+document.getElementById("lenderName").textContent=LENDER_NAME;
+document.querySelectorAll(".lenderEmail").forEach(e=>e.textContent=LENDER_EMAIL);
+document.querySelectorAll(".lenderShort").forEach(e=>e.textContent=LENDER_NAME.split(" ")[0]);
+document.getElementById("summary").innerHTML=`
+  <div><span>Loan</span><strong>${money(PRINCIPAL)}</strong></div>
+  <div><span>Interest rate</span><strong>${(ANNUAL_RATE*100).toFixed(2)}%</strong></div>
+  <div><span>Payments</span><strong>${SCHED.length} × ${money(PRINCIPAL_PER_PAYMENT)} + int.</strong></div>
+  <div><span>Total interest</span><strong>${money(TOT_INT)}</strong></div>`;
+document.getElementById("terms").innerHTML=TERMS.map(t=>{const i=t.indexOf(". ");return `<li><b>${t.slice(0,i+1)}</b>${t.slice(i+1)}</li>`}).join("");
+document.getElementById("sched").innerHTML=`
+  <thead><tr><th>#</th><th>Payment date</th><th>Balance before</th><th>Principal</th><th>Interest</th><th>Payment</th><th>Balance after</th></tr></thead>
+  <tbody>${SCHED.map(r=>`<tr><td>${r.n}</td><td>${fmtDate(r.due)}</td><td>${money(r.start)}</td><td>${money(r.prin)}</td><td>${money(r.interest)}</td><td><b>${money(r.total)}</b></td><td>${money(r.after)}</td></tr>`).join("")}</tbody>
+  <tfoot><tr><td></td><td>Total</td><td></td><td>${money(PRINCIPAL)}</td><td>${money(TOT_INT)}</td><td>${money(TOT_PAID)}</td><td></td></tr></tfoot>`;
+
+/* ---- signature: upload ---- */
+let sigDataUrl=null, mode="upload", padDirty=false;
+const nameEl=document.getElementById("bName"), agreeEl=document.getElementById("agree"), btn=document.getElementById("signBtn"), errEl=document.getElementById("err");
+
+function normalizeImage(src){ // flatten onto white, export PNG
+  return new Promise((res,rej)=>{
+    const img=new Image();
+    img.onload=()=>{
+      const max=1200, s=Math.min(1,max/Math.max(img.width,img.height));
+      const c=document.createElement("canvas"); c.width=Math.round(img.width*s); c.height=Math.round(img.height*s);
+      const x=c.getContext("2d"); x.fillStyle="#fff"; x.fillRect(0,0,c.width,c.height); x.drawImage(img,0,0,c.width,c.height);
+      res({url:c.toDataURL("image/png"),w:c.width,h:c.height});
+    };
+    img.onerror=()=>rej(new Error("That file couldn't be read as an image. Try a JPG or PNG."));
+    img.src=src;
+  });
+}
+let sigInfo=null;
+document.getElementById("sigFile").addEventListener("change",e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=async()=>{
+    try{ sigInfo=await normalizeImage(rd.result); sigDataUrl=sigInfo.url;
+      document.getElementById("sigPreview").innerHTML=`<img src="${sigDataUrl}" alt="Your signature">`; errEl.textContent=""; }
+    catch(x){ errEl.textContent=x.message; sigInfo=null; sigDataUrl=null; }
+    update();
+  };
+  rd.readAsDataURL(f);
+});
+
+/* ---- signature: draw ---- */
+const pad=document.getElementById("pad"), px=pad.getContext("2d");
+function sizePad(){ const r=pad.getBoundingClientRect(); if(!r.width) return; const dpr=window.devicePixelRatio||1;
+  pad.width=r.width*dpr; pad.height=r.height*dpr; px.setTransform(dpr,0,0,dpr,0,0);
+  px.fillStyle="#fff"; px.fillRect(0,0,r.width,r.height); px.lineWidth=2.4; px.lineCap="round"; px.lineJoin="round"; px.strokeStyle="#111"; padDirty=false; }
+let drawing=false;
+const pos=e=>{const r=pad.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top]};
+pad.addEventListener("pointerdown",e=>{drawing=true;pad.setPointerCapture(e.pointerId);const [x,y]=pos(e);px.beginPath();px.moveTo(x,y);});
+pad.addEventListener("pointermove",e=>{if(!drawing)return;const [x,y]=pos(e);px.lineTo(x,y);px.stroke();padDirty=true;});
+pad.addEventListener("pointerup",()=>{drawing=false;update();});
+document.getElementById("clearPad").onclick=()=>{sizePad();update();};
+
+function setMode(m){ mode=m;
+  document.getElementById("tabUpload").classList.toggle("on",m==="upload");
+  document.getElementById("tabDraw").classList.toggle("on",m==="draw");
+  document.getElementById("uploadPane").style.display=m==="upload"?"":"none";
+  document.getElementById("drawPane").style.display=m==="draw"?"":"none";
+  if(m==="draw") sizePad();
+  update();
+}
+document.getElementById("tabUpload").onclick=()=>setMode("upload");
+document.getElementById("tabDraw").onclick=()=>setMode("draw");
+
+function haveSig(){ return mode==="upload" ? !!sigDataUrl : padDirty; }
+function update(){
+  const n=nameEl.value.trim();
+  document.getElementById("borrowerDisplay").textContent=n||"(name entered below)";
+  btn.disabled=!(n.length>1 && agreeEl.checked && haveSig());
+}
+nameEl.addEventListener("input",update); agreeEl.addEventListener("change",update);
+
+/* ---- PDF ---- */
+let lastPdf=null, lastName="";
+function makePdf(borrower, email, sig, signedAt){
+  const { jsPDF } = window.jspdf;
+  const doc=new jsPDF({unit:"pt",format:"letter"});
+  const W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight(), M=54, CW=W-2*M;
+  let y=M;
+  const need=h=>{ if(y+h>H-M){ doc.addPage(); y=M; } };
+  const para=(txt,size=10.5,style="normal",gap=4)=>{ doc.setFont("times",style); doc.setFontSize(size);
+    const lines=doc.splitTextToSize(txt,CW); lines.forEach(l=>{need(size*1.35); doc.text(l,M,y); y+=size*1.35;}); y+=gap; };
+
+  doc.setFont("times","bold"); doc.setFontSize(20); doc.text("Personal Loan Agreement",M,y); y+=22;
+  para("Dated "+AGREEMENT_DATE,10.5,"normal",10);
+  para("Lender: "+LENDER_NAME+"   ("+LENDER_EMAIL+")",11,"normal",0);
+  para("Borrower: "+borrower+(email?"   ("+email+")":""),11,"normal",10);
+  para(`Loan ${money(PRINCIPAL)}  |  Interest ${(ANNUAL_RATE*100).toFixed(2)}% per year, fixed  |  ${SCHED.length} payments  |  Total interest ${money(TOT_INT)}  |  Total repaid ${money(TOT_PAID)}`,10,"bold",12);
+
+  doc.setFont("helvetica","bold"); doc.setFontSize(12); need(20); doc.text("Terms",M,y); y+=16;
+  TERMS.forEach((t,i)=>{ const k=t.indexOf(". ");
+    doc.setFont("times","normal"); doc.setFontSize(10.5);
+    const lines=doc.splitTextToSize(`${i+1}. ${t}`,CW);
+    lines.forEach((l,j)=>{ need(14); 
+      if(j===0){ const head=`${i+1}. ${t.slice(0,k+1)}`; doc.setFont("times","bold"); doc.text(head,M,y);
+        const hw=doc.getTextWidth(head); doc.setFont("times","normal"); doc.text(l.slice(head.length),M+hw,y); }
+      else doc.text(l,M,y);
+      y+=14; });
+    y+=4; });
+
+  need(40); doc.setFont("helvetica","bold"); doc.setFontSize(12); y+=6; doc.text("Repayment schedule",M,y); y+=8;
+  doc.autoTable({
+    startY:y, margin:{left:M,right:M},
+    head:[["#","Payment date","Balance before","Principal","Interest","Payment","Balance after"]],
+    body:SCHED.map(r=>[r.n,fmtDate(r.due),money(r.start),money(r.prin),money(r.interest),money(r.total),money(r.after)]),
+    foot:[["","Total","",money(PRINCIPAL),money(TOT_INT),money(TOT_PAID),""]],
+    styles:{font:"helvetica",fontSize:9,cellPadding:4},
+    headStyles:{fillColor:[47,93,138]}, footStyles:{fillColor:[235,238,242],textColor:20,fontStyle:"bold"},
+    columnStyles:{2:{halign:"right"},3:{halign:"right"},4:{halign:"right"},5:{halign:"right",fontStyle:"bold"},6:{halign:"right"}}
+  });
+  y=doc.lastAutoTable.finalY+28;
+
+  // signatures
+  need(190);
+  doc.setFont("helvetica","bold"); doc.setFontSize(12); doc.text("Signatures",M,y); y+=18;
+  const colW=(CW-30)/2, xB=M, xL=M+colW+30, sigH=70;
+  const ratio=sig.w/sig.h; let iw=colW, ih=iw/ratio; if(ih>sigH){ ih=sigH; iw=ih*ratio; }
+  doc.addImage(sig.url,"PNG",xB,y+sigH-ih,iw,ih);
+  doc.setDrawColor(40); doc.line(xB,y+sigH+4,xB+colW,y+sigH+4); doc.line(xL,y+sigH+4,xL+colW,y+sigH+4);
+  doc.setFont("times","normal"); doc.setFontSize(10);
+  let yy=y+sigH+18;
+  doc.text("Borrower: "+borrower,xB,yy); doc.text("Lender: "+LENDER_NAME,xL,yy); yy+=13;
+  doc.text("Signed electronically "+signedAt,xB,yy); doc.text("Date: ______________________",xL,yy); yy+=13;
+  y=yy+18;
+  doc.setFontSize(8.5); doc.setTextColor(110);
+  doc.text(doc.splitTextToSize("The Borrower signed by uploading or drawing a signature image and confirming agreement to the terms on the online form.",CW),M,y);
+  doc.setTextColor(0);
+
+  const pages=doc.getNumberOfPages();
+  for(let i=1;i<=pages;i++){ doc.setPage(i); doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(130);
+    doc.text(`Loan Agreement — ${LENDER_NAME} & ${borrower} — page ${i} of ${pages}`,M,H-28); doc.setTextColor(0); }
+  return doc;
+}
+
+/* ---- email copy via FormSubmit (hidden form post) ---- */
+function emailCopy(blob, filename, borrower, email, signedAt){
+  try{
+    const ifr=document.createElement("iframe"); ifr.name="fs_sink"; ifr.style.display="none"; document.body.appendChild(ifr);
+    const f=document.createElement("form"); f.method="POST"; f.enctype="multipart/form-data"; f.target="fs_sink";
+    f.action="https://formsubmit.co/"+encodeURIComponent(LENDER_EMAIL);
+    const add=(k,v)=>{const i=document.createElement("input");i.type="hidden";i.name=k;i.value=v;f.appendChild(i);};
+    add("_subject","Signed loan agreement: "+borrower);
+    add("_captcha","false"); add("_template","table");
+    add("Borrower",borrower); add("Borrower email",email||"(not given)"); add("Signed",signedAt);
+    add("Loan",money(PRINCIPAL)+" at "+(ANNUAL_RATE*100).toFixed(2)+"%, total repaid "+money(TOT_PAID));
+    if(email) add("_cc",email);
+    const fi=document.createElement("input"); fi.type="file"; fi.name="attachment";
+    const dt=new DataTransfer(); dt.items.add(new File([blob],filename,{type:"application/pdf"})); fi.files=dt.files;
+    f.appendChild(fi); document.body.appendChild(f); f.submit();
+    return true;
+  }catch(e){ return false; }
+}
+
+btn.addEventListener("click",async()=>{
+  errEl.textContent="";
+  const borrower=nameEl.value.trim(), email=document.getElementById("bEmail").value.trim();
+  let sig;
+  if(mode==="upload") sig=sigInfo;
+  else sig={url:pad.toDataURL("image/png"),w:pad.width,h:pad.height};
+  if(!sig){ errEl.textContent="Please add your signature."; return; }
+  const signedAt=new Date().toLocaleString("en-CA",{dateStyle:"long",timeStyle:"short"});
+  try{
+    const doc=makePdf(borrower,email,sig,signedAt);
+    const safe=borrower.replace(/[^A-Za-z0-9]+/g,"_").replace(/^_|_$/g,"");
+    lastName=`Loan_Agreement_${safe}_signed.pdf`; lastPdf=doc;
+    doc.save(lastName);
+    let sent=false;
+    if(EMAIL_COPY) sent=emailCopy(doc.output("blob"),lastName,borrower,email,signedAt);
+    document.getElementById("fname").textContent=lastName;
+    document.getElementById("sentNote").innerHTML = sent
+      ? `A copy is also being emailed to <b>${LENDER_EMAIL}</b>. To be safe, please email your PDF to that address as well.`
+      : `Please email the PDF to <b>${LENDER_EMAIL}</b>.`;
+    document.getElementById("mailBtn").href=`mailto:${LENDER_EMAIL}?subject=${encodeURIComponent("Signed loan agreement")}&body=${encodeURIComponent("Hi,\n\nMy signed loan agreement is attached ("+lastName+").\n\n"+borrower)}`;
+    document.getElementById("signCard").style.display="none";
+    document.getElementById("doneCard").classList.add("show");
+    document.getElementById("doneCard").scrollIntoView({behavior:"smooth"});
+  }catch(e){ errEl.textContent="Something went wrong making the PDF: "+e.message; }
+});
+document.getElementById("againBtn").onclick=()=>lastPdf&&lastPdf.save(lastName);
+
+/* ---- calendar (.ics) ---- */
+function makeIcs(){
+  const pad2=n=>String(n).padStart(2,"0");
+  const ymd=t=>{const x=new Date(t);return x.getUTCFullYear()+pad2(x.getUTCMonth()+1)+pad2(x.getUTCDate());};
+  const esc=s=>s.replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\n/g,"\\n");
+  const now=new Date().toISOString().replace(/[-:]/g,"").replace(/\.\d+/,"");
+  const L=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Loan Agreement//EN","CALSCALE:GREGORIAN","METHOD:PUBLISH","X-WR-CALNAME:Loan payments"];
+  SCHED.forEach(r=>{
+    const sum=`Loan payment ${r.n} of ${SCHED.length}: ${money(r.total)}`;
+    const desc=`e-Transfer ${money(r.total)} to ${LENDER_NAME} (${LENDER_EMAIL}).\n$500.00 principal + ${money(r.interest)} interest.\nBalance after this payment: ${money(r.after)}.`;
+    L.push("BEGIN:VEVENT",`UID:loan-payment-${ymd(r.due)}@${LENDER_EMAIL.split("@")[0]}`,`DTSTAMP:${now}`,
+      `DTSTART;VALUE=DATE:${ymd(r.due)}`,`DTEND;VALUE=DATE:${ymd(r.due+DAY)}`,
+      `SUMMARY:${esc(sum)}`,`DESCRIPTION:${esc(desc)}`,"TRANSP:TRANSPARENT",
+      "BEGIN:VALARM","ACTION:DISPLAY",`DESCRIPTION:${esc(sum+" due tomorrow")}`,"TRIGGER:-PT15H","END:VALARM",
+      "BEGIN:VALARM","ACTION:DISPLAY",`DESCRIPTION:${esc(sum+" due today")}`,"TRIGGER:PT9H","END:VALARM",
+      "END:VEVENT");
+  });
+  L.push("END:VCALENDAR");
+  return L.join("\r\n")+"\r\n";
+}
+function downloadIcs(){
+  const blob=new Blob([makeIcs()],{type:"text/calendar;charset=utf-8"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="Loan_Payment_Schedule.ics";
+  document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);
+}
+document.getElementById("calBtn").onclick=downloadIcs;
+document.getElementById("calBtn2").onclick=downloadIcs;
+document.querySelectorAll(".hint.form").forEach(e=>e.textContent=e.textContent.replace("${n}",SCHED.length));
+window.addEventListener("resize",()=>{ if(mode==="draw" && !padDirty) sizePad(); });
+</script>
+</body>
+</html>
