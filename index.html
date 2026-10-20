@@ -120,9 +120,9 @@
   <div class="card form done" id="doneCard">
     <h2>Signed. Thank you!</h2>
     <p>Your signed copy has downloaded as <b id="fname"></b>. Keep it for your records.</p>
-    <p id="sentNote">A copy is also being emailed to <span class="lenderEmail"></span>. To be safe, please email your PDF to <span class="lenderEmail"></span> as well.</p>
+    <p id="sentNote"></p>
     <button class="btn ghost" id="againBtn">Download the PDF again</button>
-    <a class="btn ghost" id="mailBtn" style="text-decoration:none;margin-left:8px">Open an email to <span class="lenderShort"></span></a>
+    <a class="btn ghost" id="mailBtn" style="text-decoration:none;margin-left:8px">Email the PDF to <span class="lenderShort"></span></a>
     <div style="border-top:1px solid var(--line);margin-top:24px;padding-top:8px">
       <h2 style="color:var(--ink)">Get payment reminders</h2>
       <p>Add all the payment dates to your calendar. Each one shows that week's amount, with a reminder the day before at 9 a.m.</p>
@@ -144,7 +144,7 @@ const ADVANCE_DATE  = [2026, 10, 20];      // date the $5,000 is sent: [year, mo
 const FIRST_PAYMENT = [2026, 10, 30];      // first payday (a Friday)
 const PERIOD_DAYS   = 14;                  // every second Friday
 const AGREEMENT_DATE = "October 20, 2026";
-const EMAIL_COPY    = true;                // send the signed PDF to LENDER_EMAIL via FormSubmit
+const EMAIL_COPY    = false;               // true = also send the signed PDF to LENDER_EMAIL via FormSubmit
 /* ============================================== */
 
 const DAY = 86400000;
@@ -358,8 +358,8 @@ btn.addEventListener("click",async()=>{
     document.getElementById("fname").textContent=lastName;
     document.getElementById("sentNote").innerHTML = sent
       ? `A copy is also being emailed to <b>${LENDER_EMAIL}</b>. To be safe, please email your PDF to that address as well.`
-      : `Please email the PDF to <b>${LENDER_EMAIL}</b>.`;
-    document.getElementById("mailBtn").href=`mailto:${LENDER_EMAIL}?subject=${encodeURIComponent("Signed loan agreement")}&body=${encodeURIComponent("Hi,\n\nMy signed loan agreement is attached ("+lastName+").\n\n"+borrower)}`;
+      : `<b>Next step:</b> email this PDF to <b>${LENDER_EMAIL}</b>. Tap the button below to start the email, then attach <b>${lastName}</b> from your Downloads folder.`;
+    document.getElementById("mailBtn").href=`mailto:${LENDER_EMAIL}?subject=${encodeURIComponent("Signed loan agreement")}&body=${encodeURIComponent("Hi,\n\nMy signed loan agreement is attached ("+lastName+"). Please sign it and send me back a copy.\n\n"+borrower)}`;
     document.getElementById("signCard").style.display="none";
     document.getElementById("doneCard").classList.add("show");
     document.getElementById("doneCard").scrollIntoView({behavior:"smooth"});
